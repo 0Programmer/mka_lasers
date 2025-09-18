@@ -1,4 +1,4 @@
-# mka-lasers
+# mka-lasers refactored - mka_lasers
 Create moving lasers in FiveM!
 
 <img src="https://i.imgur.com/Yw9jcMR.png" alt="Example of lasers in bank vault" height="400px">
@@ -13,18 +13,27 @@ To switch to target point selection mode, press the X key, and the sphere will t
 Once you are done selecting the target points, use `/lasers save` to save the created laser. You will be asked to input a name, and then the generated code for the newly created laser will be in the "lasers.txt" file in the resource's folder.
 
 ## How to Use
-To use your newly created laser, you need to do two things.
-
-1. Import mka-lasers into the resource you want to use it in. You can do this by adding the following to your resource's __resource.lua or fxmanifest.lua file.
+To use your newly created laser you can use the export.
 ```lua
-client_scripts {
-    '@mka-lasers/client/client.lua',
-    'your_scripts_client.lua',
-}
+local laser = exports.mka_lasers:createLaser(
+    vector3(-173.14, 490.76, 137.32),
+    { vector3(-169.32, 492.41, 137.41), vector3(-170.32, 494.02, 137.42) },
+    {
+        travelTimeBetweenTargets = {5.0, 5.0},
+        waitTimeAtTargets = {1.3, 1.3},
+        randomTargetSelection = true
+    }
+)
 ```
-2. Paste the generated code for your laser from the "lasers.txt" file anywhere in your resource.
-3. Call setActive(true) on the laser(s) to turn them on.
-
+After that call `laser.Activate()` on the `LaserWrapper` object to turn them on.
+You can also call `laser.GetId()` to get the id and use it somewhere else.
+```lua
+local laser = exports.mka_lasers:getLaserById(3)
+if laser then
+    laser.SetVisible(false)
+    laser.Activate()
+end
+```
 
 ## Laser Options
 
@@ -41,7 +50,7 @@ client_scripts {
 onPlayerHit is a function on a laser which will call the given callback function anytime the laser goes from not hitting a player to hitting them, and vice-versa.
 ### Using onPlayerHit
 ```lua
-laser.onPlayerHit(function(playerBeingHit, hitPos)
+laser.OnPlayerHit(function(playerBeingHit, hitPos)
     if playerBeingHit then
         -- Laser just hit the player
     else
@@ -50,21 +59,30 @@ laser.onPlayerHit(function(playerBeingHit, hitPos)
     end
 end)
 
--- You can clear out onPlayerHit by just calling clearOnPlayerHit()
-laser.clearOnPlayerHit()
+-- You can clear out onPlayerHit by just calling ClearOnPlayerHit()
+laser.ClearOnPlayerHit()
 ```
-
 
 ## Other Laser Functions
 Laser's have a few functions that can be useful for manipulating the laser after you create it. They are as follows:
 
-`getActive()` - Returns the active state of the laser (if it's on or off) \
-`setActive(bool)` - Sets the active state of the laser \
-`getVisible()` - Returns the visibility of the laser \
-`setVisible(bool)` - Sets the visibility of the laser \
-`getMoving()` - Returns whether the laser is moving or not \
-`setMoving(bool)` - Sets whether the laser is moving or not \
-`getColor()` - Returns the color of the laser as red, green, blue, and alpha (rgba) \
-`setColor(int, int, int, int)` - Sets the color of the laser using red, green, blue, and alpha (rgba)
-
-
+- `laser.Activate()`             -- start the laser
+- `laser.Deactivate()`           -- stop the laser
+- `laser.Toggle()`               -- toggle active state
+- `laser.GetActive()`            -- returns true/false
+- `laser.GetVisible()`           -- returns true/false
+- `laser.SetVisible(bool)`
+- `laser.GetMoving()`            -- returns true/false
+- `laser.SetMoving(bool)`
+- `laser.SetColor(r,g,b,a)`
+- `laser.GetColor()`             -- returns r,g,b,a
+- `laser.Destroy()`              -- stops and removes from registry
+- `laser.GetId()`                -- returns unique ID
+- `laser.Raw()`                  -- returns raw Laser object
+- `laser.SetOrigin(vector3(...))`
+- `laser.SetTargets({vector3(...), vector3(...)})`
+- `laser.SetTravelTimeBetweenTargets({min,max})`
+- `laser.SetWaitTimeAtTargets({min,max})`
+- `laser.SetRandomTargetSelection(bool)`
+- `laser.SetExtensionEnabled(bool)`
+- `laser.SetMaxDistance(number)`

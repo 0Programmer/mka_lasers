@@ -1,19 +1,24 @@
-games {'gta5'}
+--[[ FX Information ]]--
+fx_version   'cerulean'
+use_experimental_fxv2_oal 'yes'
+lua54        'yes'
+game         'gta5'
 
-fx_version 'cerulean'
+--[[ Resource Information ]]--
+name         'mka_lasers'
+version      '2.0.0'
+repository   'https://github.com/0Programmer/mka_lasers'
+description  'Create moving lasers in FiveM!'
 
-description 'Create moving lasers in FiveM!'
-version '1.0.0'
-
-client_scripts {
-  'client/client.lua',
+--[[ Manifest ]]--
+shared_scripts {
+  '@ox_lib/init.lua',
 }
-
-local creationEnabled = true
-if creationEnabled then
-  client_scripts {
-    'client/utils.lua',
-    'client/creation.lua',
-  }
-  server_script 'server/creation.lua'
-end
+server_scripts {
+  'server/creation.lua'
+}
+client_scripts {
+  'client/utils.lua',
+  'client/client.lua',
+  'client/creation.lua'
+}
