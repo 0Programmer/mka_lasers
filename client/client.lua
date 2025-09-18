@@ -71,7 +71,14 @@ function Laser.new(originPoint, targetPoints, options)
         local newPlayerBeingHit = hit and hitEntity == PlayerPedId()
         if newPlayerBeingHit ~= playerBeingHit then
             playerBeingHit = newPlayerBeingHit
-            onPlayerHitCb(playerBeingHit, hitPos)
+            local success, err = pcall(function()
+                onPlayerHitCb(playerBeingHit, hitPos)
+            end)
+            if not success then
+                print(('^3Warning: OnPlayerHit callback failed: \'%s\', removed callback for laser \'%s\'.^7'):format(err, self.name or 'unknown (no name set)'))
+                onPlayerHitCb = nil
+                playerBeingHit = false
+            end
         end
     end
 
