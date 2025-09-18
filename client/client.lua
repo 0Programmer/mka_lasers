@@ -31,7 +31,10 @@ end
 function Laser.new(originPoint, targetPoints, options)
     local self = {}
     options = options or {}
-    assert(options.color == nil or #options.color == 4, 'Laser color must have four values {r, g, b, a}')
+    if options.color and #options.color ~= 4 then
+        print('^3Warning: Laser color must have four values {r, g, b, a} reverting to {255, 0, 0, 255}^7')
+        options.color = {255, 0, 0, 255}
+    end
     self.name = options.name
     local visible = true
     local moving = true
@@ -131,8 +134,14 @@ function Laser.new(originPoint, targetPoints, options)
     end
 
     function self._startMultiOriginLaser()
-        assert(#originPoint == #targetPoints, 'Multi-origin laser must have same number of origin and target points')
-        assert(#originPoint > 1 and #targetPoints > 1, 'Multi-origin laser must have more than one origin and target points')
+        if #originPoint ~= #targetPoints then
+            print('^3Warning: Multi-origin laser must have same number of origin and target points^7')
+            return
+        end
+        if #originPoint < 2 or #targetPoints < 2 then
+            print('^3Warning: Multi-origin laser must have more than one origin and target points^7')
+            return
+        end
         Citizen.CreateThread(function ()
             local deltaTime = 0
             local fromIndex = 1
@@ -237,7 +246,10 @@ function LaserWrapper.new(origin, targets, options)
     self._obj = Laser.new(origin, targets, options)
 
     if options and options.name then
-        assert(_nameRegistry[options.name] == nil, ('Laser with name \'%s\' already exists'):format(options.name))
+        if _nameRegistry[options.name] ~= nil then
+            print(('^3Warning: Laser with name \'%s\' already exists, skipping creation.^7'):format(options.name))
+            return nil
+        end
         self._name = options.name
         _nameRegistry[self._name] = self._id
     end
@@ -276,6 +288,7 @@ function LaserWrapper.new(origin, targets, options)
         if self._name then
             _nameRegistry[self._name] = nil
         end
+        return nil
     end
 
     self.GetId = function() return self._id end
