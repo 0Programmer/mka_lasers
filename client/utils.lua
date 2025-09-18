@@ -20,10 +20,10 @@ end
 function GetUserInput(windowTitle, defaultText, maxInputLength)
     blockinput = true
     local resourceName = string.upper(GetCurrentResourceName())
-    local textEntry = resourceName .. "_WINDOW_TITLE"
-    if windowTitle == nil then windowTitle = "Enter:" end
+    local textEntry = resourceName .. '_WINDOW_TITLE'
+    if windowTitle == nil then windowTitle = 'Enter:' end
     AddTextEntry(textEntry, windowTitle)
-    DisplayOnscreenKeyboard(1, textEntry, "", defaultText or "", "", "", "", maxInputLength or 30)
+    DisplayOnscreenKeyboard(1, textEntry, '', defaultText or '', '', '', '', maxInputLength or 30)
     Wait(0)
     while true do
         local keyboardStatus = UpdateOnscreenKeyboard();
@@ -43,10 +43,10 @@ function GetUserInput(windowTitle, defaultText, maxInputLength)
 end
 
 function randomTargetSelectionInput()
-    local randomTargetSelection = GetUserInput("Should the laser randomly select it's next target point? (Y/n)", "", 1)
+    local randomTargetSelection = GetUserInput('Should the laser randomly select it\'s next target point? (Y/n)', '', 1)
     if randomTargetSelection == nil then return nil end
-    if randomTargetSelection == "" or string.lower(randomTargetSelection) == "y" then return true end
-    if string.lower(randomTargetSelection) == "n" then return false end
+    if randomTargetSelection == '' or string.lower(randomTargetSelection) == 'y' then return true end
+    if string.lower(randomTargetSelection) == 'n' then return false end
     return randomTargetSelection
 end
 

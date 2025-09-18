@@ -7,8 +7,6 @@ end
 
 local function randomFloat(lower, greater) return lower + math.random() * (greater - lower); end
 local function drawLaser(origin, destination, r, g, b, a)
-    -- local _, hit, hitPos, _, hitEntity = RayCast(origin, destination, -1)
-    -- local dest = hit == 1 and hitPos or destination
     DrawLine(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, r, g, b, a)
 end
 
@@ -33,7 +31,7 @@ end
 function Laser.new(originPoint, targetPoints, options)
     local self = {}
     options = options or {}
-    assert(options.color == nil or #options.color == 4, "Laser color must have four values {r, g, b, a}")
+    assert(options.color == nil or #options.color == 4, 'Laser color must have four values {r, g, b, a}')
     self.name = options.name
     local visible = true
     local moving = true
@@ -55,13 +53,13 @@ function Laser.new(originPoint, targetPoints, options)
     local onDestroyCb = nil
 
     function self.getActive() return active end
-    function self.setActive(toggle) if active == toggle then return end active = toggle if active then if type(originPoint) == "vector3" then self._startLaser() elseif type(originPoint) == "table" then self._startMultiOriginLaser() end end end
+    function self.setActive(toggle) if active == toggle then return end active = toggle if active then if type(originPoint) == 'vector3' then self._startLaser() elseif type(originPoint) == 'table' then self._startMultiOriginLaser() end end end
     function self.getVisible() return visible end
     function self.setVisible(toggle) if visible == toggle then return end visible = toggle end
     function self.getMoving() return moving end
     function self.setMoving(toggle) if moving == toggle then return end moving = toggle end
     function self.getColor() return r, g, b, a end
-    function self.setColor(_r, _g, _b, _a) if type(_r) ~= "number" or type(_g) ~= "number" or type(_b) ~= "number" or type(_a) ~= "number" then error("(r, g, b, a) must all be integers " .. string.format("{r = %s, g = %s, b = %s, a = %s}", _r, _g, _b, _a)) end r, g, b, a = _r, _g, _b, _a end
+    function self.setColor(_r, _g, _b, _a) if type(_r) ~= 'number' or type(_g) ~= 'number' or type(_b) ~= 'number' or type(_a) ~= 'number' then error('(r, g, b, a) must all be integers ' .. string.format('{r = %s, g = %s, b = %s, a = %s}', _r, _g, _b, _a)) end r, g, b, a = _r, _g, _b, _a end
     function self.onPlayerHit(cb) onPlayerHitCb = cb playerBeingHit = false end
     function self.clearOnPlayerHit() onPlayerHitCb = nil playerBeingHit = false end
 
@@ -133,8 +131,8 @@ function Laser.new(originPoint, targetPoints, options)
     end
 
     function self._startMultiOriginLaser()
-        assert(#originPoint == #targetPoints, "Multi-origin laser must have same number of origin and target points")
-        assert(#originPoint > 1 and #targetPoints > 1, "Multi-origin laser must have more than one origin and target points")
+        assert(#originPoint == #targetPoints, 'Multi-origin laser must have same number of origin and target points')
+        assert(#originPoint > 1 and #targetPoints > 1, 'Multi-origin laser must have more than one origin and target points')
         Citizen.CreateThread(function ()
             local deltaTime = 0
             local fromIndex = 1
@@ -204,15 +202,15 @@ function Laser.new(originPoint, targetPoints, options)
     end
 
     function self.setRandomTargetSelection(val)
-        if type(val) == "boolean" then randomTargetSelection = val end
+        if type(val) == 'boolean' then randomTargetSelection = val end
     end
 
     function self.setExtensionEnabled(val)
-        if type(val) == "boolean" then extensionEnabled = val end
+        if type(val) == 'boolean' then extensionEnabled = val end
     end
 
     function self.setMaxDistance(d)
-        if type(d) == "number" then maxDistance = d end
+        if type(d) == 'number' then maxDistance = d end
     end
 
     function self.destroy()
@@ -228,6 +226,7 @@ local LaserWrapper = {}
 LaserWrapper.__index = LaserWrapper
 
 local _registry = {}
+local _nameRegistry = {}
 local _nextId = 1
 
 function LaserWrapper.new(origin, targets, options)
@@ -236,6 +235,12 @@ function LaserWrapper.new(origin, targets, options)
     _nextId = _nextId + 1
 
     self._obj = Laser.new(origin, targets, options)
+
+    if options and options.name then
+        assert(_nameRegistry[options.name] == nil, ("Laser with name '%s' already exists"):format(options.name))
+        self._name = options.name
+        _nameRegistry[self._name] = self._id
+    end
 
     _registry[self._id] = self
 
@@ -268,6 +273,9 @@ function LaserWrapper.new(origin, targets, options)
     self.Destroy = function()
         if self._obj.destroy then self._obj.destroy() end
         _registry[self._id] = nil
+        if self._name then
+            _nameRegistry[self._name] = nil
+        end
     end
 
     self.GetId = function() return self._id end
@@ -278,8 +286,16 @@ end
 function CreateLaser(origin, targets, options)
     return LaserWrapper.new(origin, targets, options)
 end
-exports("createLaser", CreateLaser)
+exports('createLaser', CreateLaser)
 function GetLaserById(id)
     return _registry[id]
 end
-exports("getLaserById", GetLaserById)
+exports('getLaserById', GetLaserById)
+function GetLaserByName(name)
+    local id = _nameRegistry[name]
+    if id then
+        return _registry[id]
+    end
+    return nil
+end
+exports("getLaserByName", GetLaserByName)

@@ -21,14 +21,15 @@ local laser = exports.mka_lasers:createLaser(
     {
         travelTimeBetweenTargets = {5.0, 5.0},
         waitTimeAtTargets = {1.3, 1.3},
-        randomTargetSelection = true
+        randomTargetSelection = true,
+        name = 'optionalName01'
     }
 )
 ```
 After that call `laser.Activate()` on the `LaserWrapper` object to turn them on.
 You can also call `laser.GetId()` to get the id and use it somewhere else.
 ```lua
-local laser = exports.mka_lasers:getLaserById(3)
+local laser = exports.mka_lasers:getLaserById(1) -- OR exports.mka_lasers:getLaserByName('optionalName01')
 if laser then
     laser.SetVisible(false)
     laser.Activate()

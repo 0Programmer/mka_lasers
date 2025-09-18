@@ -4,26 +4,25 @@ local originPoints, targetPoints
 local inOriginMode = false
 local creationEnabled = false
 
-RegisterCommand("lasers", function(src, args)
-    local command = args[1]
-    if command == "start" and not creationEnabled then
+RegisterNetEvent('mka_lasers:client:startCreation', function(option)
+    if option == 'start' and not creationEnabled then
         creationEnabled = true
         inOriginMode = true
         startCreation()
-    elseif command == "end" and creationEnabled then
+        lib.showTextUI('Laser Creator Controls  \n [E] - Place point  \n [X] - Switch to target mode')
+    elseif option == 'end' and creationEnabled then
         creationEnabled = false
-    elseif command == "save" and creationEnabled then
+        lib.hideTextUI()
+    elseif option == 'save' and creationEnabled then
         if not originPoints or not targetPoints then return end
-        local name = GetUserInput("Enter name of laser:", "", 30)
+        local name = GetUserInput('Enter name of laser:', '', 30)
         if name == nil then return end
-        local laser = { name=name, originPoints=originPoints, targetPoints=targetPoints, travelTimeBetweenTargets={1.0, 1.0}, waitTimeAtTargets={0.0, 0.0}, randomTargetSelection=true }
-        TriggerServerEvent("mka_lasers:save", laser)
+        local randomTargetSelect = randomTargetSelectionInput()
+        local laser = { name=name, originPoints=originPoints, targetPoints=targetPoints, travelTimeBetweenTargets={1.0, 1.0}, waitTimeAtTargets={0.0, 0.0}, randomTargetSelection=randomTargetSelect }
+        TriggerServerEvent('mka_lasers:save', laser)
         creationEnabled = false
+        lib.hideTextUI()
     end
-end, true)
-
-Citizen.CreateThread(function()
-    TriggerEvent('chat:addSuggestion', '/lasers', '', { {name="command", help="{start, end, save} (required)"}, })
 end)
 
 function startCreation()
@@ -44,12 +43,12 @@ end
 
 function handleLaserOriginPoint()
     local point = handlePoint(0, 255, 0, 255)
-    if point and originPoints then originPoints[#originPoints+1] = point print("Add point to laser originPoints:", point) end
+    if point and originPoints then originPoints[#originPoints+1] = point print('Add point to laser originPoints:', point) end
 end
 
 function handleLaserTargetPoints()
     local point = handlePoint(255, 0, 0, 255)
-    if point then targetPoints[#targetPoints+1] = point print("Add point to laser targetPoints:", point) end
+    if point then targetPoints[#targetPoints+1] = point print('Add point to laser targetPoints:', point) end
 end
 
 function handlePoint(r, g, b, a)
