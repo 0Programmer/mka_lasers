@@ -237,7 +237,7 @@ function LaserWrapper.new(origin, targets, options)
     self._obj = Laser.new(origin, targets, options)
 
     if options and options.name then
-        assert(_nameRegistry[options.name] == nil, ("Laser with name '%s' already exists"):format(options.name))
+        assert(_nameRegistry[options.name] == nil, ('Laser with name \'%s\' already exists'):format(options.name))
         self._name = options.name
         _nameRegistry[self._name] = self._id
     end
@@ -298,4 +298,4 @@ function GetLaserByName(name)
     end
     return nil
 end
-exports("getLaserByName", GetLaserByName)
+exports('getLaserByName', GetLaserByName)
