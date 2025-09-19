@@ -1,4 +1,5 @@
-Laser = {}
+local Laser = {}
+local playerState = LocalPlayer.state
 local ShapeTestRay = StartShapeTestRay or StartExpensiveSynchronousShapeTestLosProbe
 local function RayCast(origin, destination, flags)
     local ray = ShapeTestRay(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, flags, nil, 0)
@@ -8,6 +9,10 @@ end
 local function randomFloat(lower, greater) return lower + math.random() * (greater - lower); end
 local function drawLaser(origin, destination, r, g, b, a)
     DrawLine(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, r, g, b, a)
+    if GlobalState.blackOut or playerState.syncblackOut then
+        -- DrawLine is not blacked out by SetArtificialLightsState with this method
+        DrawSphere(origin.x, origin.y, origin.z, 0.000001, 0, 0, 255, 0.0)
+    end
 end
 
 local function calculateCurrentPoint(fromPoint, toPoint, deltaTime, travelTimeBetweenTargets)
