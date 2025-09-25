@@ -14,7 +14,8 @@ Once you are done selecting the target points, use `/lasers save` to save the cr
 
 ## Requirements
 * [ox_lib](https://github.com/overextended/ox_lib/releases)
-* [scully_emotemenu](https://github.com/Scullyy/scully_emotemenu) | Optional, used for crouch detection to check player dimensions
+* [scully_emotemenu](https://github.com/Scullyy/scully_emotemenu) | Optional, used for crouch detection to check player dimensions.
+* [Renewed-Weathersync](https://github.com/Renewed-Scripts/Renewed-Weathersync) | Optional, used to check the blackout state.
 
 ## How to Use
 To use your newly created laser you can use the export.

@@ -9,7 +9,7 @@ end
 local function randomFloat(lower, greater) return lower + math.random() * (greater - lower); end
 local function drawLaser(origin, destination, r, g, b, a)
     DrawLine(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, r, g, b, a)
-    if GlobalState.blackOut or playerState.syncblackOut then
+    if GlobalState.blackOut or playerState.syncblackOut then -- Renewed-Weathersync blackout (syncblackOut is a custom feature, per player blackout)
         -- DrawLine is not blacked out by SetArtificialLightsState with this method
         DrawSphere(origin.x, origin.y, origin.z, 0.000001, 0, 0, 255, 0.0)
     end
@@ -56,7 +56,7 @@ local function checkDimensionsHit(origin, destination)
     local pedPos = GetEntityCoords(cache.ped)
     local feetZ = pedPos.z + min.z
     local headZ = pedPos.z + max.z
-    if LocalPlayer.state.stance == 2 then -- scully_emotemenu crouch
+    if playerState.stance == 2 then -- scully_emotemenu crouch
         headZ = headZ - 0.75
     end
     local pedHeight = headZ - feetZ
