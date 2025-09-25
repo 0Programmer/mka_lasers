@@ -12,6 +12,10 @@ To switch to target point selection mode, press the X key, and the sphere will t
 
 Once you are done selecting the target points, use `/lasers save` to save the created laser. You will be asked to input a name, and then the generated code for the newly created laser will be in the "lasers.txt" file in the resource's folder.
 
+## Requirements
+* [ox_lib](https://github.com/overextended/ox_lib/releases)
+* [scully_emotemenu](https://github.com/Scullyy/scully_emotemenu) | Optional, used for crouch detection to check player dimensions
+
 ## How to Use
 To use your newly created laser you can use the export.
 ```lua

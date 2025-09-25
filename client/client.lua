@@ -33,6 +33,42 @@ local function getNextToIndex(fromIndex, targetPointCount, randomTargetSelection
     return toIndex
 end
 
+local function dot(a, b)
+    return a.x * b.x + a.y * b.y + a.z * b.z
+end
+
+local function distancePointToLineSegment(point, lineStart, lineEnd)
+    local lineVec = lineEnd - lineStart
+    local pointVec = point - lineStart
+    local lineLenSq = dot(lineVec, lineVec)
+
+    if lineLenSq == 0 then
+        return #(pointVec), lineStart
+    end
+
+    local t = math.max(0.0, math.min(1.0, dot(pointVec, lineVec) / lineLenSq))
+    local projection = lineStart + lineVec * t
+    return #(point - projection), projection
+end
+
+local function checkDimensionsHit(origin, destination)
+    local min, max = GetModelDimensions(GetEntityModel(cache.ped))
+    local pedPos = GetEntityCoords(cache.ped)
+    local feetZ = pedPos.z + min.z
+    local headZ = pedPos.z + max.z
+    if LocalPlayer.state.stance == 2 then -- scully_emotemenu crouch
+        headZ = headZ - 0.75
+    end
+    local pedHeight = headZ - feetZ
+    local _, proj = distancePointToLineSegment(vec3(pedPos.x, pedPos.y, feetZ), origin, destination)
+    local dx, dy = proj.x - pedPos.x, proj.y - pedPos.y
+    local horizontalDist = dx * dx + dy * dy
+    if horizontalDist <= 0.12 and (proj.z >= feetZ) and (proj.z <= headZ) then
+        return true, pedPos
+    end
+    return false, vec3(0.0, 0.0, 0.0)
+end
+
 function Laser.new(originPoint, targetPoints, options)
     local self = {}
     options = options or {}
@@ -40,16 +76,27 @@ function Laser.new(originPoint, targetPoints, options)
         print('^3Warning: Laser color must have four values {r, g, b, a} reverting to {255, 0, 0, 255}^7')
         options.color = {255, 0, 0, 255}
     end
+    if type(targetPoints) ~= 'table' then
+        print('^3Warning: Target points must be a table with vector3 values^7')
+        return
+    end
+    if type(originPoint) ~= 'vector3' and type(originPoint) ~= 'table' then
+        print('^3Warning: Origin point must be a vector3 or a table with vector3 values^7')
+        return
+    end
     self.name = options.name
     local visible = true
     local moving = true
     local active = false
+    local sleepThreads = 0
     local r, g, b, a = 255, 0, 0, 255
     if options.color then r, g, b, a = table.unpack(options.color) end
     local extensionEnabled = false
     if options.extensionEnabled ~= nil then extensionEnabled = options.extensionEnabled end
     local randomTargetSelection = true
     if options.randomTargetSelection ~= nil then randomTargetSelection = options.randomTargetSelection end
+    local useDimensionPlayerHit = true
+    if options.useDimensionPlayerHit ~= nil then useDimensionPlayerHit = options.useDimensionPlayerHit end
     local maxDistance = options.maxDistance or 20.0
     local travelTimeBetweenTargets = options.travelTimeBetweenTargets or {}
     local minTravelTimeBetweenTargets = travelTimeBetweenTargets[1] or 1.0
@@ -72,12 +119,21 @@ function Laser.new(originPoint, targetPoints, options)
     function self.clearOnPlayerHit() onPlayerHitCb = nil playerBeingHit = false end
 
     function self._onPlayerHitTest(origin, destination)
-        local _, hit, hitPos, _, hitEntity = RayCast(origin, destination, 12)
-        local newPlayerBeingHit = hit and hitEntity == PlayerPedId()
+        local newPlayerBeingHit = false
+        local hitCoords = vec3(0.0, 0.0, 0.0)
+        if useDimensionPlayerHit then
+            local hit, hitPos = checkDimensionsHit(origin, destination)
+            newPlayerBeingHit = hit
+            hitCoords = hitPos
+        else
+            local _, hit, hitPos, _, hitEntity = RayCast(origin, destination, 12)
+            newPlayerBeingHit = hit and hitEntity == cache.ped
+            hitCoords = hitPos
+        end
         if newPlayerBeingHit ~= playerBeingHit then
             playerBeingHit = newPlayerBeingHit
             local success, err = pcall(function()
-                onPlayerHitCb(playerBeingHit, hitPos)
+                onPlayerHitCb(playerBeingHit, hitCoords)
             end)
             if not success then
                 print(('^3Warning: OnPlayerHit callback failed: \'%s\', removed callback for laser \'%s\'.^7'):format(err, self.name or 'unknown (no name set)'))
@@ -88,8 +144,19 @@ function Laser.new(originPoint, targetPoints, options)
     end
 
     function self._startLaser()
+        Citizen.CreateThread(function()
+            while active do
+                local distance = #(GetEntityCoords(cache.ped) - originPoint)
+                if distance < 400 then
+                    sleepThreads = 0
+                else
+                    sleepThreads = 5000
+                end
+                Citizen.Wait(1250)
+            end
+        end)
         if #targetPoints == 1 then
-            Citizen.CreateThread(function ()
+            Citizen.CreateThread(function()
                 local direction = norm(targetPoints[1] - originPoint)
                 local destination = originPoint + direction * maxDistance
                 while active do
@@ -97,11 +164,11 @@ function Laser.new(originPoint, targetPoints, options)
                         drawLaser(originPoint, destination, r, g, b, a)
                         if onPlayerHitCb then self._onPlayerHitTest(originPoint, destination) end
                     end
-                    Wait(0)
+                    Citizen.Wait(sleepThreads)
                 end
             end)
         else
-            Citizen.CreateThread(function ()
+            Citizen.CreateThread(function()
                 local deltaTime = 0
                 local fromIndex = 1
                 local toIndex = 2
@@ -139,7 +206,7 @@ function Laser.new(originPoint, targetPoints, options)
                         waitTime = waitTime - (GetFrameTime() * 1000)
                         if waitTime <= 0.0 then waiting = false end
                     end
-                    Wait(0)
+                    Citizen.Wait(sleepThreads)
                 end
             end)
         end
@@ -154,7 +221,18 @@ function Laser.new(originPoint, targetPoints, options)
             print('^3Warning: Multi-origin laser must have more than one origin and target points^7')
             return
         end
-        Citizen.CreateThread(function ()
+        Citizen.CreateThread(function()
+            while active do
+                local distance = #(GetEntityCoords(cache.ped) - originPoint[1])
+                if distance < 400 then
+                    sleepThreads = 0
+                else
+                    sleepThreads = 5000
+                end
+                Citizen.Wait(1250)
+            end
+        end)
+        Citizen.CreateThread(function()
             local deltaTime = 0
             local fromIndex = 1
             local toIndex = 2
@@ -195,7 +273,7 @@ function Laser.new(originPoint, targetPoints, options)
                     waitTime = waitTime - (GetFrameTime() * 1000)
                     if waitTime <= 0.0 then waiting = false end
                 end
-                Wait(0)
+                Citizen.Wait(sleepThreads)
             end
         end)
     end
