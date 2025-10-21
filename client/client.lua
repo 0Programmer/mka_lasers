@@ -343,7 +343,21 @@ function LaserWrapper.new(origin, targets, options)
             distance = 60.0,
             laserEntity = nil,
             onEnter = function(point)
-                -- Comming soon!
+                local model = joaat('inf_laserpointer')
+                lib.requestModel(model)
+                point.laserEntity = CreateObject(model, origin.x, origin.y, origin.z - 100.0, false, false, false)
+                FreezeEntityPosition(point.laserEntity, true)
+                local dir = (targets[1] - origin)
+                local dirNorm = dir / #dir
+                local hit, _, _, surfaceNormal, _ = lib.raycast.fromCoords(origin + (dirNorm * 0.05), origin - (dirNorm * 0.05), 511, point.laserEntity)
+                local rotation = lib.math.normaltorotation(surfaceNormal)
+                SetEntityRotation(point.laserEntity, rotation.x, rotation.y, rotation.z, 1)
+                DisableCamCollisionForEntity(point.laserEntity)
+                SetEntityCoords(point.laserEntity, origin.x, origin.y, origin.z)
+                local interiorId = GetInteriorFromEntity(point.laserEntity)
+                if interiorId ~= 0 then
+                    ForceRoomForEntity(point.laserEntity, interiorId, GetRoomKeyFromEntity(point.laserEntity))
+                end
             end,
             onExit = function(point)
                 if point.laserEntity then

@@ -22,3 +22,4 @@ client_scripts {
   'client/client.lua',
   'client/creation.lua'
 }
+data_file 'DLC_ITYP_REQUEST' 'stream/inf_laserpointer.ytyp'
