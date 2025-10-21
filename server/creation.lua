@@ -3,7 +3,7 @@ function roundVec(vec, numDecimalPlaces) return vector3(round(vec.x, numDecimalP
 function printoutHeader(name) return '-- Name: ' .. (name or '') .. ' | ' .. os.date('!%Y-%m-%dT%H:%M:%SZ') end
 
 RegisterNetEvent('mka_lasers:save', function(laser)
-    if not exports.inf_core:HasPermission(source, 'support') then return end
+    if not IsPlayerAceAllowed(source, 'admin') then return end
     local resname = GetCurrentResourceName()
     local txt = LoadResourceFile(resname, 'lasers.txt') or ''
     local newTxt = txt .. parseLaser(laser)
