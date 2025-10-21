@@ -284,6 +284,10 @@ function Laser.new(originPoint, targetPoints, options)
         if newOrigin ~= nil then originPoint = newOrigin end
     end
 
+    function self.getOrigin()
+        return originPoint
+    end
+
     function self.setTargets(newTargets)
         if newTargets ~= nil then targetPoints = newTargets end
     end
@@ -339,9 +343,11 @@ function LaserWrapper.new(origin, targets, options)
 
     if (options and options?.useOriginPointProp) and type(origin) == 'vector3' and (type(targets) == 'table' and #targets >= 1) then
         self._laserPoint = lib.points.new({
+            lid = self._id,
             coords = origin,
             distance = 60.0,
             laserEntity = nil,
+            destroyed = false,
             onEnter = function(point)
                 local model = joaat('inf_laserpointer')
                 lib.requestModel(model)
@@ -358,6 +364,15 @@ function LaserWrapper.new(origin, targets, options)
                 if interiorId ~= 0 then
                     ForceRoomForEntity(point.laserEntity, interiorId, GetRoomKeyFromEntity(point.laserEntity))
                 end
+            end,
+            nearby = function(point)
+                if options?.destroyOnPropHit and HasEntityBeenDamagedByAnyPed(point.laserEntity) and not point.destroyed then
+                    point.destroyed = true
+                    DeleteEntity(point.laserEntity)
+                    point.laserEntity = nil
+                    TriggerServerEvent('mka_lasers:server:laserDestroyed', point.lid)
+                end
+                Wait(500)
             end,
             onExit = function(point)
                 if point.laserEntity then
@@ -444,3 +459,14 @@ function GetLaserByName(name)
     return nil
 end
 exports('getLaserByName', GetLaserByName)
+RegisterNetEvent('mka_lasers:client:laserDestroyed', function(id)
+    local laser = _registry[id]
+    if not laser then return end
+
+    local coords = GetEntityCoords(cache.ped)
+    local origin = laser.Raw().getOrigin()
+    origin = type(origin) == 'vector3' and origin or vector3(origin[1].x, origin[1].y, origin[1].z)
+    if #(coords - origin) > 60 then return end
+
+    laser.Destroy()
+end)
