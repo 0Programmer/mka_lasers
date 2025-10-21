@@ -1,8 +1,8 @@
 local Laser = {}
 local playerState = LocalPlayer.state
 local ShapeTestRay = StartShapeTestRay or StartExpensiveSynchronousShapeTestLosProbe
-local function RayCast(origin, destination, flags)
-    local ray = ShapeTestRay(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, flags, nil, 0)
+local function RayCast(origin, destination, flags, entity, ignore)
+    local ray = ShapeTestRay(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, flags, entity, (ignore and ignore or 0))
     return GetShapeTestResult(ray)
 end
 
@@ -84,7 +84,7 @@ function Laser.new(originPoint, targetPoints, options)
         print('^3Warning: Origin point must be a vector3 or a table with vector3 values^7')
         return
     end
-    self.name = options.name
+    self.name = options?.name or lib.string.random('......')
     local visible = true
     local moving = true
     local active = false
@@ -158,7 +158,9 @@ function Laser.new(originPoint, targetPoints, options)
         if #targetPoints == 1 then
             Citizen.CreateThread(function()
                 local direction = norm(targetPoints[1] - originPoint)
-                local destination = originPoint + direction * maxDistance
+                local distance = #(targetPoints[1] - originPoint)
+                local maxDist = extensionEnabled and maxDistance or distance
+                local destination = originPoint + direction * maxDist
                 while active do
                     if visible then
                         drawLaser(originPoint, destination, r, g, b, a)
@@ -335,7 +337,24 @@ function LaserWrapper.new(origin, targets, options)
 
     self._obj = Laser.new(origin, targets, options)
 
-    if options and options.name then
+    if (options and options?.useOriginPointProp) and type(origin) == 'vector3' and (type(targets) == 'table' and #targets >= 1) then
+        self._laserPoint = lib.points.new({
+            coords = origin,
+            distance = 60.0,
+            laserEntity = nil,
+            onEnter = function(point)
+                -- Comming soon!
+            end,
+            onExit = function(point)
+                if point.laserEntity then
+                    DeleteEntity(point.laserEntity)
+                    point.laserEntity = nil
+                end
+            end
+        })
+    end
+
+    if options and options?.name then
         if _nameRegistry[options.name] ~= nil then
             print(('^3Warning: Laser with name \'%s\' already exists, skipping creation.^7'):format(options.name))
             return nil
@@ -374,6 +393,15 @@ function LaserWrapper.new(origin, targets, options)
 
     self.Destroy = function()
         if self._obj.destroy then self._obj.destroy() end
+
+        if self._laserPoint then
+            if self._laserPoint.laserEntity and DoesEntityExist(self._laserPoint.laserEntity) then
+                DeleteEntity(self._laserPoint.laserEntity)
+            end
+            self._laserPoint:remove()
+            self._laserPoint = nil
+        end
+
         _registry[self._id] = nil
         if self._name then
             _nameRegistry[self._name] = nil

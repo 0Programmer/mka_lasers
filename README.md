@@ -27,6 +27,7 @@ local laser = exports.mka_lasers:createLaser(
         travelTimeBetweenTargets = {5.0, 5.0},
         waitTimeAtTargets = {1.3, 1.3},
         randomTargetSelection = true,
+        useOriginPointProp = true,
         name = 'optionalName01'
     }
 )
@@ -49,6 +50,7 @@ end
 | travelTimeBetweenTargets | Table   | {1.0, 1.0}                                                                      | false    | The amount of time in seconds for the laser to travel from one target point to the next. This is a table of two values representing the minimum and maximum time, which is randomly selected between. If you don't want a random value, simply put the same number for both. |
 | waitTimeAtTargets        | Table   | {0.0, 0.0}                                                                      | false    | The amount of time in seconds the laser will wait once it reaches a target point. This is a table of two values representing the minimum and maximum time, which is randomly selected between. If you don't want a random value, simply put the same number for both.        |
 | randomTargetSelection    | Boolean | true                                                                            | false    | Whether the laser randomly selects the next target point. If this is false, the next point in the original order will be selected.                                                                                                                                           |
+| useOriginPointProp                     | Boolean  | false                                                                              | false    | Show a prop (orb) where the laser beam is created, only possible with a single origin point.                                                                                                                                                                                                                                                            |
 | maxDistance              | Float   | 20.0                                                                            | false    | Maximum distance of the laser.                                                                                                                                                                                                                                               |
 | color                    | Table   | {255, 0, 0, 255}                                                                | false    | Color of the laser in rgba format (red, blue, green, alpha). This has to be a table of four integers representing each of the four colors in rgba.                                                                                                                           |
 
@@ -85,6 +87,8 @@ Laser's have a few functions that can be useful for manipulating the laser after
 - `laser.Destroy()`              -- stops and removes from registry
 - `laser.GetId()`                -- returns unique ID
 - `laser.Raw()`                  -- returns raw Laser object
+- `laser.OnPlayerHit(function(playerBeingHit, hitPos) end)`     -- detect laser hit on player
+- `laser.ClearOnPlayerHit()`     -- delete the OnPlayerHit function
 - `laser.SetOrigin(vector3(...))`
 - `laser.SetTargets({vector3(...), vector3(...)})`
 - `laser.SetTravelTimeBetweenTargets({min,max})`
