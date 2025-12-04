@@ -9,7 +9,7 @@ end
 local function randomFloat(lower, greater) return lower + math.random() * (greater - lower); end
 local function drawLaser(origin, destination, r, g, b, a)
     DrawLine(origin.x, origin.y, origin.z, destination.x, destination.y, destination.z, r, g, b, a)
-    if GlobalState.blackOut or playerState.syncblackOut then -- Renewed-Weathersync blackout (syncblackOut is a custom feature, per player blackout)
+    if GlobalState.blackOut or playerState.playerBlackOut then -- Renewed-Weathersync blackout (playerBlackOut has been PR'ed)
         -- DrawLine is not blacked out by SetArtificialLightsState with this method
         DrawSphere(origin.x, origin.y, origin.z, 0.000001, 0, 0, 255, 0.0)
     end
